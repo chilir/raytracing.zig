@@ -5,34 +5,32 @@ const std = @import("std");
 const vec3 = @import("vec3.zig");
 const color = @import("color.zig");
 const ray = @import("ray.zig");
+const hittable = @import("hittable.zig");
 
 const Vec3 = vec3.Vec3;
 const Point3 = vec3.Point3;
 const Color = color.Color;
 const Ray = ray.Ray;
+const HitRecord = hittable.HitRecord;
+const Hittable = hittable.Hittable;
+const Sphere = hittable.Sphere;
+const HittableList = hittable.HittableList;
 
-fn hit_sphere(center: Point3, radius: f64, r: Ray) f64 {
-    const oc = vec3.subtract(center, r.origin());
-    const a = r.direction().lengthSquared();
-    const h = vec3.dotProduct(r.direction(), oc);
-    const c = oc.lengthSquared() - (radius * radius);
-    const discriminant = (h * h) - (a * c);
+// some math utils
+const infinity = std.math.inf(f64);
+const pi = std.math.pi;
 
-    return if (discriminant < 0) -1.0 else (h - std.math.sqrt(discriminant)) / a;
+inline fn degrees_to_radians(degrees: f64) f64 {
+    return degrees * (pi / 180.0);
 }
 
-fn ray_color(r: Ray) Color {
-    const t = hit_sphere(Point3.init(0, 0, -1), 0.5, r);
-    if (t > 0.0) {
-        const N = vec3.unitVector(
-            vec3.subtract(
-                r.at(t),
-                Vec3.init(0, 0, -1),
-            ),
-        );
+fn ray_color(r: Ray, world: *const HittableList) Color {
+    var rec = HitRecord{};
+
+    if (world.hit(r, 0, infinity, &rec)) {
         return vec3.multiplyScalarByVector(
             0.5,
-            Color.init(N.x() + 1, N.y() + 1, N.z() + 1),
+            vec3.add(rec.normal, Color.init(1, 1, 1)),
         );
     }
 
@@ -50,7 +48,29 @@ pub fn main() !void {
     const image_width = 400;
     const calc_image_height = @as(i32, @intFromFloat(image_width / aspect_ratio));
     const image_height = if (calc_image_height < 1) 1 else calc_image_height;
-    std.debug.print("Image size: {d}x{d}\n", .{ image_width, image_height });
+
+    // world
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+    var world = try HittableList.init(
+        Hittable{
+            .sphere = Sphere.init(
+                Point3.init(0, 0, -1),
+                0.5,
+            ),
+        },
+        allocator,
+    );
+    defer world.deinit();
+    try world.add(
+        Hittable{
+            .sphere = Sphere.init(
+                Point3.init(0, -100.5, -1),
+                100,
+            ),
+        },
+    );
 
     // camera
     const focal_length = 1.0;
@@ -100,7 +120,7 @@ pub fn main() !void {
             );
             const ray_direction = vec3.subtract(pixel_center, camera_center);
             const r = Ray.init(camera_center, ray_direction);
-            const pixel_color = ray_color(r);
+            const pixel_color = ray_color(r, &world);
             try color.write_color(pixel_color);
         }
     }

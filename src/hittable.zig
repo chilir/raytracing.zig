@@ -10,35 +10,83 @@ const Point3 = vec3.Point3;
 const Ray = ray.Ray;
 
 pub const HitRecord = struct {
-    p: Point3,
-    normal: Vec3,
-    t: f64,
-    front_face: bool,
+    // init with placeholder defaults
+    p: Point3 = Point3.init(0, 0, 0),
+    normal: Vec3 = Vec3.init(0, 0, 0),
+    t: f64 = 0,
+    front_face: bool = false,
 
     fn set_face_normal(self: *HitRecord, r: Ray, outward_normal: Vec3) void {
         self.front_face = vec3.dotProduct(r.direction(), outward_normal) < 0;
-        self.normal = if (self.front_face) outward_normal else -outward_normal;
+        self.normal = if (self.front_face) outward_normal else outward_normal.negate();
     }
 };
 
 pub const Hittable = union(enum) {
     sphere: Sphere,
 
-    pub fn hit(self: Hittable, r: Ray) bool {
+    pub fn hit(self: Hittable, r: Ray, ray_tmin: f64, ray_tmax: f64, rec: *HitRecord) bool {
         return switch (self) {
-            .sphere => |s| s.hit(r),
+            .sphere => |s| s.hit(r, ray_tmin, ray_tmax, rec),
+            // else => false,
         };
     }
 };
 
-const Sphere = struct {
+pub const HittableList = struct {
+    objects: std.ArrayList(Hittable),
+    allocator: std.mem.Allocator,
+
+    pub fn init(object: Hittable, allocator: std.mem.Allocator) !HittableList {
+        var h_list = HittableList{
+            .objects = std.ArrayList(Hittable).init(allocator),
+            .allocator = allocator,
+        };
+        try h_list.add(object);
+        return h_list;
+    }
+
+    pub fn deinit(self: *HittableList) void {
+        self.objects.deinit();
+    }
+
+    pub fn clear(self: *HittableList) void {
+        self.objects.clear();
+    }
+
+    pub fn add(self: *HittableList, object: Hittable) !void {
+        try self.objects.append(object);
+    }
+
+    pub fn hit(
+        self: *const HittableList,
+        r: Ray,
+        ray_tmin: f64,
+        ray_tmax: f64,
+        rec: *HitRecord,
+    ) bool {
+        var hit_anything = false;
+        var closest_so_far = ray_tmax;
+
+        for (self.objects.items) |object| {
+            if (object.hit(r, ray_tmin, closest_so_far, rec)) {
+                hit_anything = true;
+                closest_so_far = rec.t;
+            }
+        }
+
+        return hit_anything;
+    }
+};
+
+pub const Sphere = struct {
     _center: Point3,
     _radius: f64,
 
     pub fn init(center: Point3, radius: f64) Sphere {
         return Sphere{
             ._center = center,
-            ._radius = std.math.max(0, radius),
+            ._radius = @max(0, radius),
         };
     }
 
