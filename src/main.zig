@@ -1,3 +1,5 @@
+// src/main.zig
+
 const std = @import("std");
 
 const vec3 = @import("vec3.zig");
