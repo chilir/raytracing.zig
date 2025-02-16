@@ -118,9 +118,3 @@ pub inline fn crossProduct(u: Vec3, v: Vec3) Vec3 {
 pub inline fn unitVector(v: Vec3) Vec3 {
     return divide(v, v.length());
 }
-
-pub const HitRecord = struct {
-    p: Point3,
-    normal: Vec3,
-    t: f64,
-};
