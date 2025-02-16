@@ -3,18 +3,29 @@ const vec3 = @import("vec3.zig");
 const color = @import("color.zig");
 const ray = @import("ray.zig");
 
-fn hit_sphere(center: vec3.Point3, radius: f64, r: ray.Ray) bool {
+fn hit_sphere(center: vec3.Point3, radius: f64, r: ray.Ray) f64 {
     const oc = vec3.subtract(center, r.origin());
-    const a = vec3.dotProduct(r.direction(), r.direction());
-    const b = -2.0 * vec3.dotProduct(r.direction(), oc);
-    const c = vec3.dotProduct(oc, oc) - (radius * radius);
-    const discriminant = (b * b) - (4 * a * c);
-    return discriminant >= 0;
+    const a = r.direction().lengthSquared();
+    const h = vec3.dotProduct(r.direction(), oc);
+    const c = oc.lengthSquared() - (radius * radius);
+    const discriminant = (h * h) - (a * c);
+
+    return if (discriminant < 0) -1.0 else (h - std.math.sqrt(discriminant)) / a;
 }
 
 fn ray_color(r: ray.Ray) color.Color {
-    if (hit_sphere(vec3.Point3{ .e = [3]f64{ 0, 0, -1 } }, 0.5, r)) {
-        return color.Color{ .e = [3]f64{ 1, 0, 0 } };
+    const t = hit_sphere(vec3.Point3{ .e = [3]f64{ 0, 0, -1 } }, 0.5, r);
+    if (t > 0.0) {
+        const N = vec3.unitVector(
+            vec3.subtract(
+                r.at(t),
+                vec3.Vec3{ .e = [3]f64{ 0, 0, -1 } },
+            ),
+        );
+        return vec3.multiplyScalarByVector(
+            0.5,
+            color.Color{ .e = [3]f64{ N.x() + 1, N.y() + 1, N.z() + 1 } },
+        );
     }
 
     const unit_direction = vec3.unitVector(r.direction());
