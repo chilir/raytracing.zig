@@ -2,3 +2,5 @@
 zig-out/
 
 .direnv/
+
+.DS_Store
