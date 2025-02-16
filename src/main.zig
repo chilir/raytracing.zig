@@ -12,9 +12,11 @@ pub fn main() !void {
         std.log.info("\rScanlines remaining: {d}", .{image_height - j - 1});
         for (0..image_width) |i| {
             const pixel_color = color.Color{
-                .x = @as(f64, @floatFromInt(i)) / (image_width - 1),
-                .y = @as(f64, @floatFromInt(j)) / (image_height - 1),
-                .z = 0,
+                .e = [3]f64{
+                    @as(f64, @floatFromInt(i)) / (image_width - 1),
+                    @as(f64, @floatFromInt(j)) / (image_height - 1),
+                    0,
+                },
             };
             try color.write_color(pixel_color);
         }
