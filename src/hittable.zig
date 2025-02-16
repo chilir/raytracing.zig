@@ -1,14 +1,21 @@
-const ray = @import("ray.zig");
-const vec3 = @import("vec3.zig");
+// src/hittable.zig
+
 const std = @import("std");
 
+const vec3 = @import("vec3.zig");
+const ray = @import("ray.zig");
+
+const Vec3 = vec3.Vec3;
+const Point3 = vec3.Point3;
+const Ray = ray.Ray;
+
 pub const HitRecord = struct {
-    p: vec3.Point3,
-    normal: vec3.Vec3,
+    p: Point3,
+    normal: Vec3,
     t: f64,
     front_face: bool,
 
-    fn set_face_normal(self: *HitRecord, r: ray.Ray, outward_normal: vec3.Vec3) void {
+    fn set_face_normal(self: *HitRecord, r: Ray, outward_normal: Vec3) void {
         self.front_face = vec3.dotProduct(r.direction(), outward_normal) < 0;
         self.normal = if (self.front_face) outward_normal else -outward_normal;
     }
@@ -17,7 +24,7 @@ pub const HitRecord = struct {
 pub const Hittable = union(enum) {
     sphere: Sphere,
 
-    pub fn hit(self: Hittable, r: ray.Ray) bool {
+    pub fn hit(self: Hittable, r: Ray) bool {
         return switch (self) {
             .sphere => |s| s.hit(r),
         };
@@ -25,17 +32,17 @@ pub const Hittable = union(enum) {
 };
 
 const Sphere = struct {
-    _center: vec3.Point3,
+    _center: Point3,
     _radius: f64,
 
-    pub fn init(center: vec3.Point3, radius: f64) Sphere {
+    pub fn init(center: Point3, radius: f64) Sphere {
         return Sphere{
             ._center = center,
             ._radius = std.math.max(0, radius),
         };
     }
 
-    fn hit(self: Sphere, r: ray.Ray, ray_tmin: f64, ray_tmax: f64, rec: *HitRecord) bool {
+    fn hit(self: Sphere, r: Ray, ray_tmin: f64, ray_tmax: f64, rec: *HitRecord) bool {
         const oc = vec3.subtract(self._center, r.origin());
         const a = r.direction().lengthSquared();
         const h = vec3.dotProduct(r.direction(), oc);

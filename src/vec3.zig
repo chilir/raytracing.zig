@@ -1,3 +1,5 @@
+// src/vec3.zig
+
 const std = @import("std");
 
 pub const Vec3 = struct {
