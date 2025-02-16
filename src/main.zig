@@ -3,7 +3,20 @@ const vec3 = @import("vec3.zig");
 const color = @import("color.zig");
 const ray = @import("ray.zig");
 
+fn hit_sphere(center: vec3.Point3, radius: f64, r: ray.Ray) bool {
+    const oc = vec3.subtract(center, r.origin());
+    const a = vec3.dotProduct(r.direction(), r.direction());
+    const b = -2.0 * vec3.dotProduct(r.direction(), oc);
+    const c = vec3.dotProduct(oc, oc) - (radius * radius);
+    const discriminant = (b * b) - (4 * a * c);
+    return discriminant >= 0;
+}
+
 fn ray_color(r: ray.Ray) color.Color {
+    if (hit_sphere(vec3.Point3{ .e = [3]f64{ 0, 0, -1 } }, 0.5, r)) {
+        return color.Color{ .e = [3]f64{ 1, 0, 0 } };
+    }
+
     const unit_direction = vec3.unitVector(r.direction());
     const a = 0.5 * (unit_direction.y() + 1.0);
     return vec3.add(
