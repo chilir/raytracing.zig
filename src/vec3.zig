@@ -1,11 +1,7 @@
 const std = @import("std");
 
 pub const Vec3 = struct {
-    e: [3]f64 = [3]f64{
-        0,
-        0,
-        0,
-    },
+    e: [3]f64 = [3]f64{ 0, 0, 0 },
 
     pub fn x(self: Vec3) f64 {
         return self.e[0];
@@ -65,7 +61,7 @@ pub const Vec3 = struct {
 
 pub const Point3 = Vec3;
 
-inline fn add(u: Vec3, v: Vec3) Vec3 {
+pub inline fn add(u: Vec3, v: Vec3) Vec3 {
     return Vec3{
         .e = [3]f64{
             u.e[0] + v.e[0],
@@ -75,7 +71,7 @@ inline fn add(u: Vec3, v: Vec3) Vec3 {
     };
 }
 
-inline fn subtract(u: Vec3, v: Vec3) Vec3 {
+pub inline fn subtract(u: Vec3, v: Vec3) Vec3 {
     return Vec3{
         .e = [3]f64{
             u.e[0] - v.e[0],
@@ -85,7 +81,7 @@ inline fn subtract(u: Vec3, v: Vec3) Vec3 {
     };
 }
 
-inline fn multiplyScalarByVector(t: f64, u: Vec3) Vec3 {
+pub inline fn multiplyScalarByVector(t: f64, u: Vec3) Vec3 {
     return Vec3{
         .e = [3]f64{
             t * u.e[0],
@@ -94,16 +90,16 @@ inline fn multiplyScalarByVector(t: f64, u: Vec3) Vec3 {
         },
     };
 }
-inline fn multiplyVectorByScalar(u: Vec3, t: f64) Vec3 {
+pub inline fn multiplyVectorByScalar(u: Vec3, t: f64) Vec3 {
     return multiplyScalarByVector(t, u);
 }
 
-inline fn divide(u: Vec3, t: f64) Vec3 {
+pub inline fn divide(u: Vec3, t: f64) Vec3 {
     return multiplyScalarByVector(1.0 / t, u);
 }
 
 // Hadamard product
-inline fn elementWiseProduct(u: Vec3, v: Vec3) Vec3 {
+pub inline fn elementWiseProduct(u: Vec3, v: Vec3) Vec3 {
     return Vec3{
         .e = [3]f64{
             u.e[0] * v.e[0],
@@ -113,11 +109,11 @@ inline fn elementWiseProduct(u: Vec3, v: Vec3) Vec3 {
     };
 }
 
-inline fn dotProduct(u: Vec3, v: Vec3) f64 {
+pub inline fn dotProduct(u: Vec3, v: Vec3) f64 {
     return u.e[0] * v.e[0] + u.e[1] * v.e[1] + u.e[2] * v.e[2];
 }
 
-inline fn crossProduct(u: Vec3, v: Vec3) Vec3 {
+pub inline fn crossProduct(u: Vec3, v: Vec3) Vec3 {
     return Vec3{
         .e = [3]f64{
             u.e[1] * v.e[2] - u.e[2] * v.e[1],
@@ -127,6 +123,6 @@ inline fn crossProduct(u: Vec3, v: Vec3) Vec3 {
     };
 }
 
-inline fn unitVector(v: Vec3) Vec3 {
+pub inline fn unitVector(v: Vec3) Vec3 {
     return divide(v, v.length());
 }
