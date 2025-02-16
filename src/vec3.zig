@@ -3,6 +3,10 @@ const std = @import("std");
 pub const Vec3 = struct {
     e: [3]f64 = [3]f64{ 0, 0, 0 },
 
+    pub fn init(e0: f64, e1: f64, e2: f64) Vec3 {
+        return Vec3{ .e = [3]f64{ e0, e1, e2 } };
+    }
+
     pub fn x(self: Vec3) f64 {
         return self.e[0];
     }
@@ -14,13 +18,11 @@ pub const Vec3 = struct {
     }
 
     pub fn negate(self: Vec3) Vec3 {
-        return Vec3{
-            .e = [3]f64{
-                -self.e[0],
-                -self.e[1],
-                -self.e[2],
-            },
-        };
+        return init(
+            -self.e[0],
+            -self.e[1],
+            -self.e[2],
+        );
     }
 
     pub fn addInPlace(self: *Vec3, v: Vec3) void {
@@ -62,33 +64,27 @@ pub const Vec3 = struct {
 pub const Point3 = Vec3;
 
 pub inline fn add(u: Vec3, v: Vec3) Vec3 {
-    return Vec3{
-        .e = [3]f64{
-            u.e[0] + v.e[0],
-            u.e[1] + v.e[1],
-            u.e[2] + v.e[2],
-        },
-    };
+    return Vec3.init(
+        u.e[0] + v.e[0],
+        u.e[1] + v.e[1],
+        u.e[2] + v.e[2],
+    );
 }
 
 pub inline fn subtract(u: Vec3, v: Vec3) Vec3 {
-    return Vec3{
-        .e = [3]f64{
-            u.e[0] - v.e[0],
-            u.e[1] - v.e[1],
-            u.e[2] - v.e[2],
-        },
-    };
+    return Vec3.init(
+        u.e[0] - v.e[0],
+        u.e[1] - v.e[1],
+        u.e[2] - v.e[2],
+    );
 }
 
 pub inline fn multiplyScalarByVector(t: f64, u: Vec3) Vec3 {
-    return Vec3{
-        .e = [3]f64{
-            t * u.e[0],
-            t * u.e[1],
-            t * u.e[2],
-        },
-    };
+    return Vec3.init(
+        t * u.e[0],
+        t * u.e[1],
+        t * u.e[2],
+    );
 }
 pub inline fn multiplyVectorByScalar(u: Vec3, t: f64) Vec3 {
     return multiplyScalarByVector(t, u);
@@ -100,13 +96,11 @@ pub inline fn divide(u: Vec3, t: f64) Vec3 {
 
 // Hadamard product
 pub inline fn elementWiseProduct(u: Vec3, v: Vec3) Vec3 {
-    return Vec3{
-        .e = [3]f64{
-            u.e[0] * v.e[0],
-            u.e[1] * v.e[1],
-            u.e[2] * v.e[2],
-        },
-    };
+    return Vec3.init(
+        u.e[0] * v.e[0],
+        u.e[1] * v.e[1],
+        u.e[2] * v.e[2],
+    );
 }
 
 pub inline fn dotProduct(u: Vec3, v: Vec3) f64 {
@@ -114,15 +108,19 @@ pub inline fn dotProduct(u: Vec3, v: Vec3) f64 {
 }
 
 pub inline fn crossProduct(u: Vec3, v: Vec3) Vec3 {
-    return Vec3{
-        .e = [3]f64{
-            u.e[1] * v.e[2] - u.e[2] * v.e[1],
-            u.e[2] * v.e[0] - u.e[0] * v.e[2],
-            u.e[0] * v.e[1] - u.e[1] * v.e[0],
-        },
-    };
+    return Vec3.init(
+        u.e[1] * v.e[2] - u.e[2] * v.e[1],
+        u.e[2] * v.e[0] - u.e[0] * v.e[2],
+        u.e[0] * v.e[1] - u.e[1] * v.e[0],
+    );
 }
 
 pub inline fn unitVector(v: Vec3) Vec3 {
     return divide(v, v.length());
 }
+
+pub const HitRecord = struct {
+    p: Point3,
+    normal: Vec3,
+    t: f64,
+};
