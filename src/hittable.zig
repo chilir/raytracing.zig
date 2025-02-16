@@ -4,10 +4,12 @@ const std = @import("std");
 
 const vec3 = @import("vec3.zig");
 const ray = @import("ray.zig");
+const interval = @import("interval.zig");
 
 const Vec3 = vec3.Vec3;
 const Point3 = vec3.Point3;
 const Ray = ray.Ray;
+const Interval = interval.Interval;
 
 pub const HitRecord = struct {
     // init with placeholder defaults
@@ -25,9 +27,9 @@ pub const HitRecord = struct {
 pub const Hittable = union(enum) {
     sphere: Sphere,
 
-    pub fn hit(self: Hittable, r: Ray, ray_tmin: f64, ray_tmax: f64, rec: *HitRecord) bool {
+    pub fn hit(self: Hittable, r: Ray, ray_t: Interval, rec: *HitRecord) bool {
         return switch (self) {
-            .sphere => |s| s.hit(r, ray_tmin, ray_tmax, rec),
+            .sphere => |s| s.hit(r, ray_t, rec),
             // else => false,
         };
     }
@@ -58,20 +60,16 @@ pub const HittableList = struct {
         try self.objects.append(object);
     }
 
-    pub fn hit(
-        self: *const HittableList,
-        r: Ray,
-        ray_tmin: f64,
-        ray_tmax: f64,
-        rec: *HitRecord,
-    ) bool {
+    pub fn hit(self: *const HittableList, r: Ray, ray_t: Interval, rec: *HitRecord) bool {
+        var temp_rec = HitRecord{};
         var hit_anything = false;
-        var closest_so_far = ray_tmax;
+        var closest_so_far = ray_t.max;
 
         for (self.objects.items) |object| {
-            if (object.hit(r, ray_tmin, closest_so_far, rec)) {
+            if (object.hit(r, Interval.init(ray_t.min, closest_so_far), &temp_rec)) {
                 hit_anything = true;
-                closest_so_far = rec.t;
+                closest_so_far = temp_rec.t;
+                rec.* = temp_rec;
             }
         }
 
@@ -90,7 +88,7 @@ pub const Sphere = struct {
         };
     }
 
-    fn hit(self: Sphere, r: Ray, ray_tmin: f64, ray_tmax: f64, rec: *HitRecord) bool {
+    fn hit(self: Sphere, r: Ray, ray_t: Interval, rec: *HitRecord) bool {
         const oc = vec3.subtract(self._center, r.origin());
         const a = r.direction().lengthSquared();
         const h = vec3.dotProduct(r.direction(), oc);
@@ -104,9 +102,9 @@ pub const Sphere = struct {
         const sqrtd = std.math.sqrt(discriminant);
 
         var root = (h - sqrtd) / a;
-        if (root <= ray_tmin or ray_tmax <= root) {
+        if (!ray_t.surrounds(root)) {
             root = (h + sqrtd) / a;
-            if (root <= ray_tmin or ray_tmax <= root) {
+            if (!ray_t.surrounds(root)) {
                 return false;
             }
         }

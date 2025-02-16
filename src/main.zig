@@ -6,6 +6,7 @@ const vec3 = @import("vec3.zig");
 const color = @import("color.zig");
 const ray = @import("ray.zig");
 const hittable = @import("hittable.zig");
+const interval = @import("interval.zig");
 
 const Vec3 = vec3.Vec3;
 const Point3 = vec3.Point3;
@@ -15,6 +16,7 @@ const HitRecord = hittable.HitRecord;
 const Hittable = hittable.Hittable;
 const Sphere = hittable.Sphere;
 const HittableList = hittable.HittableList;
+const Interval = interval.Interval;
 
 // some math utils
 const infinity = std.math.inf(f64);
@@ -27,7 +29,7 @@ inline fn degrees_to_radians(degrees: f64) f64 {
 fn ray_color(r: Ray, world: *const HittableList) Color {
     var rec = HitRecord{};
 
-    if (world.hit(r, 0, infinity, &rec)) {
+    if (world.hit(r, Interval.init(0, infinity), &rec)) {
         return vec3.multiplyScalarByVector(
             0.5,
             vec3.add(rec.normal, Color.init(1, 1, 1)),
