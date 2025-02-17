@@ -8,10 +8,22 @@ const Interval = interval.Interval;
 
 pub const Color = vec3.Vec3;
 
-pub fn write_color(pixel_color: Color) !void {
-    const r = pixel_color.x();
-    const g = pixel_color.y();
-    const b = pixel_color.z();
+inline fn linearToGamma(linear_component: f64) f64 {
+    if (linear_component > 0) {
+        return std.math.sqrt(linear_component);
+    }
+
+    return 0;
+}
+
+pub fn writeColor(pixel_color: Color) !void {
+    var r = pixel_color.x();
+    var g = pixel_color.y();
+    var b = pixel_color.z();
+
+    r = linearToGamma(r);
+    g = linearToGamma(g);
+    b = linearToGamma(b);
 
     const intensity = Interval.init(0.000, 0.999);
     const rbyte: i32 = @intFromFloat(256 * intensity.clamp(r));

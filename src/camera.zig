@@ -1,13 +1,13 @@
 // src/camera.zig
 
 const std = @import("std");
-const random = std.crypto.random;
 
 const vec3 = @import("vec3.zig");
 const color = @import("color.zig");
 const ray = @import("ray.zig");
 const hittable = @import("hittable.zig");
 const interval = @import("interval.zig");
+const utils = @import("utils.zig");
 
 const Vec3 = vec3.Vec3;
 const Point3 = vec3.Point3;
@@ -18,18 +18,11 @@ const Hittable = hittable.Hittable;
 const HittableList = hittable.HittableList;
 const Interval = interval.Interval;
 
-// some math utils
-const infinity = std.math.inf(f64);
-inline fn randomFloatFromRange(min: f64, max: f64) f64 {
-    const random_float = min + (max - min) * random.float(f64);
-    std.debug.print("random_float: {}\n", .{random_float});
-    return random_float;
-}
-
 pub const Camera = struct {
     aspect_ratio: f64 = 1.0,
     image_width: usize = 100,
     samples_per_pixel: usize = 10,
+    max_depth: usize = 10,
 
     _image_height: usize = 1,
     _pixel_samples_scale: f64 = 1.0,
@@ -79,12 +72,12 @@ pub const Camera = struct {
         );
     }
 
-    fn sample_square() Vec3 {
-        return Vec3.init(random.float(f64) - 0.5, random.float(f64) - 0.5, 0);
+    fn sampleSquare() Vec3 {
+        return Vec3.init(utils.randomFloat() - 0.5, utils.randomFloat() - 0.5, 0);
     }
 
-    fn get_ray(self: Camera, i: usize, j: usize) Ray {
-        const offset = sample_square();
+    fn getRay(self: Camera, i: usize, j: usize) Ray {
+        const offset = sampleSquare();
         const pixel_sample = vec3.add(
             vec3.add(
                 self._pixel00_loc,
@@ -105,13 +98,18 @@ pub const Camera = struct {
         return Ray.init(ray_origin, ray_direction);
     }
 
-    fn ray_color(r: Ray, world: *const HittableList) Color {
+    fn rayColor(r: Ray, depth: usize, world: *const HittableList) Color {
+        if (depth <= 0) {
+            return Color{};
+        }
+
         var rec = HitRecord{};
 
-        if (world.hit(r, Interval.init(0, infinity), &rec)) {
+        if (world.hit(r, Interval.init(0.001, utils.infinity), &rec)) {
+            const direction = vec3.add(rec.normal, vec3.randomUnitVector());
             return vec3.multiplyScalarByVector(
                 0.5,
-                vec3.add(rec.normal, Color.init(1, 1, 1)),
+                rayColor(Ray.init(rec.p, direction), depth - 1, world),
             );
         }
 
@@ -134,10 +132,10 @@ pub const Camera = struct {
             for (0..self.image_width) |i| {
                 var pixel_color = Color{};
                 for (0..self.samples_per_pixel) |_| {
-                    const r = self.get_ray(i, j);
-                    pixel_color.addInPlace(ray_color(r, world));
+                    const r = self.getRay(i, j);
+                    pixel_color.addInPlace(rayColor(r, self.max_depth, world));
                 }
-                try color.write_color(
+                try color.writeColor(
                     vec3.multiplyScalarByVector(self._pixel_samples_scale, pixel_color),
                 );
             }

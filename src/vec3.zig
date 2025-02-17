@@ -2,6 +2,8 @@
 
 const std = @import("std");
 
+const utils = @import("utils.zig");
+
 pub const Vec3 = struct {
     e: [3]f64 = [3]f64{ 0, 0, 0 },
 
@@ -49,6 +51,22 @@ pub const Vec3 = struct {
 
     pub fn lengthSquared(self: Vec3) f64 {
         return self.e[0] * self.e[0] + self.e[1] * self.e[1] + self.e[2] * self.e[2];
+    }
+
+    pub fn random() Vec3 {
+        return Vec3.init(
+            utils.randomFloat(),
+            utils.randomFloat(),
+            utils.randomFloat(),
+        );
+    }
+
+    pub fn randomFromRange(min: f64, max: f64) Vec3 {
+        return Vec3.init(
+            utils.randomFloatFromRange(min, max),
+            utils.randomFloatFromRange(min, max),
+            utils.randomFloatFromRange(min, max),
+        );
     }
 
     pub fn format(
@@ -119,4 +137,22 @@ pub inline fn crossProduct(u: Vec3, v: Vec3) Vec3 {
 
 pub inline fn unitVector(v: Vec3) Vec3 {
     return divide(v, v.length());
+}
+
+pub inline fn randomUnitVector() Vec3 {
+    while (true) {
+        const p = Vec3.randomFromRange(-1, 1);
+        const lensq = p.lengthSquared();
+        if (1e-160 < lensq and lensq <= 1) {
+            return divide(p, std.math.sqrt(lensq));
+        }
+    }
+}
+
+pub inline fn randomOnHemisphere(normal: Vec3) Vec3 {
+    const on_unit_sphere = randomUnitVector();
+    if (dotProduct(on_unit_sphere, normal) > 0.0) {
+        return on_unit_sphere;
+    }
+    return on_unit_sphere.negate();
 }

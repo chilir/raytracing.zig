@@ -21,11 +21,6 @@ const Interval = interval.Interval;
 const Camera = camera.Camera;
 
 // some math utils
-const pi = std.math.pi;
-
-inline fn degrees_to_radians(degrees: f64) f64 {
-    return degrees * (pi / 180.0);
-}
 
 pub fn main() !void {
     // world
@@ -55,6 +50,7 @@ pub fn main() !void {
         .aspect_ratio = 16.0 / 9.0,
         .image_width = 400,
         .samples_per_pixel = 100,
+        .max_depth = 50,
     };
     try cam.render(&world);
 }
