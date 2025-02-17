@@ -1,6 +1,7 @@
 // src/camera.zig
 
 const std = @import("std");
+const random = std.crypto.random;
 
 const vec3 = @import("vec3.zig");
 const color = @import("color.zig");
@@ -17,13 +18,21 @@ const Hittable = hittable.Hittable;
 const HittableList = hittable.HittableList;
 const Interval = interval.Interval;
 
+// some math utils
 const infinity = std.math.inf(f64);
+inline fn randomFloatFromRange(min: f64, max: f64) f64 {
+    const random_float = min + (max - min) * random.float(f64);
+    std.debug.print("random_float: {}\n", .{random_float});
+    return random_float;
+}
 
 pub const Camera = struct {
     aspect_ratio: f64 = 1.0,
     image_width: usize = 100,
+    samples_per_pixel: usize = 10,
 
     _image_height: usize = 1,
+    _pixel_samples_scale: f64 = 1.0,
     _center: Point3 = Point3{},
     _pixel00_loc: Point3 = Point3{},
     _pixel_delta_u: Vec3 = Vec3{},
@@ -33,6 +42,8 @@ pub const Camera = struct {
         // calc image height
         const height_float = @as(f64, @floatFromInt(self.image_width)) / self.aspect_ratio;
         self._image_height = if (height_float < 1) 1 else @intFromFloat(height_float);
+
+        self._pixel_samples_scale = 1.0 / @as(f64, @floatFromInt(self.samples_per_pixel));
 
         // camera
         const focal_length = 1.0;
@@ -68,33 +79,30 @@ pub const Camera = struct {
         );
     }
 
-    pub fn render(self: *Camera, world: *const HittableList) !void {
-        initialize(self);
+    fn sample_square() Vec3 {
+        return Vec3.init(random.float(f64) - 0.5, random.float(f64) - 0.5, 0);
+    }
 
-        const stdout = std.io.getStdOut().writer();
-        try stdout.print("P3\n{d} {d}\n255\n", .{ self.image_width, self._image_height });
+    fn get_ray(self: Camera, i: usize, j: usize) Ray {
+        const offset = sample_square();
+        const pixel_sample = vec3.add(
+            vec3.add(
+                self._pixel00_loc,
+                vec3.multiplyScalarByVector(
+                    @as(f64, @floatFromInt(i)) + offset.x(),
+                    self._pixel_delta_u,
+                ),
+            ),
+            vec3.multiplyScalarByVector(
+                @as(f64, @floatFromInt(j)) + offset.y(),
+                self._pixel_delta_v,
+            ),
+        );
 
-        for (0..self._image_height) |j| {
-            std.log.info("\rScanlines remaining: {d}", .{self._image_height - j - 1});
-            for (0..self.image_width) |i| {
-                const pixel_center = vec3.add(
-                    vec3.add(
-                        self._pixel00_loc,
-                        vec3.multiplyScalarByVector(
-                            @as(f64, @floatFromInt(i)),
-                            self._pixel_delta_u,
-                        ),
-                    ),
-                    vec3.multiplyScalarByVector(@as(f64, @floatFromInt(j)), self._pixel_delta_v),
-                );
-                const ray_direction = vec3.subtract(pixel_center, self._center);
-                const r = Ray.init(self._center, ray_direction);
-                const pixel_color = ray_color(r, world);
-                try color.write_color(pixel_color);
-            }
-        }
+        const ray_origin = self._center;
+        const ray_direction = vec3.subtract(pixel_sample, ray_origin);
 
-        std.log.info("\rDone.\n", .{});
+        return Ray.init(ray_origin, ray_direction);
     }
 
     fn ray_color(r: Ray, world: *const HittableList) Color {
@@ -113,5 +121,28 @@ pub const Camera = struct {
             vec3.multiplyScalarByVector((1.0 - a), Color.init(1.0, 1.0, 1.0)),
             vec3.multiplyScalarByVector(a, Color.init(0.5, 0.7, 1.0)),
         );
+    }
+
+    pub fn render(self: *Camera, world: *const HittableList) !void {
+        initialize(self);
+
+        const stdout = std.io.getStdOut().writer();
+        try stdout.print("P3\n{d} {d}\n255\n", .{ self.image_width, self._image_height });
+
+        for (0..self._image_height) |j| {
+            std.log.info("\rScanlines remaining: {d}", .{self._image_height - j - 1});
+            for (0..self.image_width) |i| {
+                var pixel_color = Color{};
+                for (0..self.samples_per_pixel) |_| {
+                    const r = self.get_ray(i, j);
+                    pixel_color.addInPlace(ray_color(r, world));
+                }
+                try color.write_color(
+                    vec3.multiplyScalarByVector(self._pixel_samples_scale, pixel_color),
+                );
+            }
+        }
+
+        std.log.info("\rDone.\n", .{});
     }
 };
