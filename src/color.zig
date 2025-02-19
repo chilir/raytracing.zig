@@ -1,10 +1,10 @@
 // src/color.zig
 
 const std = @import("std");
-const vec3 = @import("vec3.zig");
-const interval = @import("interval.zig");
 
-const Interval = interval.Interval;
+const vec3 = @import("vec3.zig");
+
+const Interval = @import("interval.zig").Interval;
 
 pub const Color = vec3.Vec3;
 

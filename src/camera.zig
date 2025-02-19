@@ -4,19 +4,17 @@ const std = @import("std");
 
 const vec3 = @import("vec3.zig");
 const color = @import("color.zig");
-const ray = @import("ray.zig");
 const hittable = @import("hittable.zig");
-const interval = @import("interval.zig");
 const utils = @import("utils.zig");
 
 const Vec3 = vec3.Vec3;
 const Point3 = vec3.Point3;
 const Color = color.Color;
-const Ray = ray.Ray;
+const Ray = @import("ray.zig").Ray;
 const HitRecord = hittable.HitRecord;
 const Hittable = hittable.Hittable;
 const HittableList = hittable.HittableList;
-const Interval = interval.Interval;
+const Interval = @import("interval.zig").Interval;
 
 pub const Camera = struct {
     aspect_ratio: f64 = 1.0,

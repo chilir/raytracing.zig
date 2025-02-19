@@ -3,13 +3,11 @@
 const std = @import("std");
 
 const vec3 = @import("vec3.zig");
-const ray = @import("ray.zig");
-const interval = @import("interval.zig");
 
 const Vec3 = vec3.Vec3;
 const Point3 = vec3.Point3;
-const Ray = ray.Ray;
-const Interval = interval.Interval;
+const Ray = @import("ray.zig").Ray;
+const Interval = @import("interval.zig").Interval;
 
 pub const HitRecord = struct {
     // init with placeholder defaults
