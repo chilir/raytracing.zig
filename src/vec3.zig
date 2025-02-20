@@ -53,6 +53,13 @@ pub const Vec3 = struct {
         return self.e[0] * self.e[0] + self.e[1] * self.e[1] + self.e[2] * self.e[2];
     }
 
+    pub fn nearZero(self: Vec3) bool {
+        const s = 1e-8;
+        return (@abs(self.e[0]) < s) and
+            (@abs(self.e[1]) < s) and
+            (@abs(self.e[2]) < s);
+    }
+
     pub fn random() Vec3 {
         return Vec3.init(
             utils.randomFloat(),
@@ -155,4 +162,8 @@ pub inline fn randomOnHemisphere(normal: Vec3) Vec3 {
         return on_unit_sphere;
     }
     return on_unit_sphere.negate();
+}
+
+pub inline fn reflect(v: Vec3, n: Vec3) Vec3 {
+    return subtract(v, multiplyScalarByVector(2 * dotProduct(v, n), n));
 }
