@@ -8,11 +8,15 @@ const Vec3 = vec3.Vec3;
 const Point3 = vec3.Point3;
 const Ray = @import("ray.zig").Ray;
 const Interval = @import("interval.zig").Interval;
+const Material = @import("material.zig").Material;
+const Lambertian = @import("material.zig").Lambertian;
+const Color = @import("color.zig").Color;
 
 pub const HitRecord = struct {
     // init with placeholder defaults
-    p: Point3 = Point3.init(0, 0, 0),
-    normal: Vec3 = Vec3.init(0, 0, 0),
+    p: Point3 = Point3{},
+    normal: Vec3 = Vec3{},
+    mat: Material = Material{ .lambertian = Lambertian.init(Color{}) },
     t: f64 = 0,
     front_face: bool = false,
 
@@ -78,11 +82,13 @@ pub const HittableList = struct {
 pub const Sphere = struct {
     _center: Point3,
     _radius: f64,
+    _material: Material,
 
-    pub fn init(center: Point3, radius: f64) Sphere {
+    pub fn init(center: Point3, radius: f64, mat: Material) Sphere {
         return Sphere{
             ._center = center,
             ._radius = @max(0, radius),
+            ._material = mat,
         };
     }
 
@@ -111,6 +117,7 @@ pub const Sphere = struct {
         rec.p = r.at(rec.t);
         const outward_normal = vec3.divide(vec3.subtract(rec.p, self._center), self._radius);
         rec.setFaceNormal(r, outward_normal);
+        rec.mat = self._material;
 
         return true;
     }

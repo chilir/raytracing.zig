@@ -104,11 +104,16 @@ pub const Camera = struct {
         var rec = HitRecord{};
 
         if (world.hit(r, Interval.init(0.001, utils.infinity), &rec)) {
-            const direction = vec3.add(rec.normal, vec3.randomUnitVector());
-            return vec3.multiplyScalarByVector(
-                0.5,
-                rayColor(Ray.init(rec.p, direction), depth - 1, world),
-            );
+            var scattered = Ray{};
+            var attenuation = Color{};
+            if (rec.mat.scatter(r, rec, &attenuation, &scattered)) {
+                return vec3.elementWiseProduct(attenuation, rayColor(scattered, depth - 1, world));
+            }
+            // const direction = vec3.add(rec.normal, vec3.randomUnitVector());
+            // return vec3.multiplyScalarByVector(
+            //     0.5,
+            //     rayColor(Ray.init(rec.p, direction), depth - 1, world),
+            // );
         }
 
         const unit_direction = vec3.unitVector(r.direction());
