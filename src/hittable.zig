@@ -32,7 +32,6 @@ pub const Hittable = union(enum) {
     pub fn hit(self: Hittable, r: Ray, ray_t: Interval, rec: *HitRecord) bool {
         return switch (self) {
             .sphere => |s| s.hit(r, ray_t, rec),
-            // else => false,
         };
     }
 };

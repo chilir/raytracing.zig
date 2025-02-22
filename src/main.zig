@@ -25,8 +25,8 @@ const Metal = material.Metal;
 pub fn main() !void {
     const material_ground = Material{ .lambertian = Lambertian.init(Color.init(0.8, 0.8, 0)) };
     const material_center = Material{ .lambertian = Lambertian.init(Color.init(0.1, 0.2, 0.5)) };
-    const material_left = Material{ .metal = Metal.init(Color.init(0.8, 0.8, 0.8)) };
-    const material_right = Material{ .metal = Metal.init(Color.init(0.8, 0.6, 0.2)) };
+    const material_left = Material{ .metal = Metal.init(Color.init(0.8, 0.8, 0.8), 0.3) };
+    const material_right = Material{ .metal = Metal.init(Color.init(0.8, 0.6, 0.2), 1.0) };
 
     // world
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};

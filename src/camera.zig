@@ -109,11 +109,7 @@ pub const Camera = struct {
             if (rec.mat.scatter(r, rec, &attenuation, &scattered)) {
                 return vec3.elementWiseProduct(attenuation, rayColor(scattered, depth - 1, world));
             }
-            // const direction = vec3.add(rec.normal, vec3.randomUnitVector());
-            // return vec3.multiplyScalarByVector(
-            //     0.5,
-            //     rayColor(Ray.init(rec.p, direction), depth - 1, world),
-            // );
+            return Color{};
         }
 
         const unit_direction = vec3.unitVector(r.direction());
