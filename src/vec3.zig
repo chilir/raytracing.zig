@@ -167,3 +167,16 @@ pub inline fn randomOnHemisphere(normal: Vec3) Vec3 {
 pub inline fn reflect(v: Vec3, n: Vec3) Vec3 {
     return subtract(v, multiplyScalarByVector(2 * dotProduct(v, n), n));
 }
+
+pub inline fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) Vec3 {
+    const cos_theta = @min(dotProduct(uv.negate(), n), 1.0);
+    const r_out_perp = multiplyScalarByVector(
+        etai_over_etat,
+        add(uv, multiplyScalarByVector(cos_theta, n)),
+    );
+    const r_out_parallel = multiplyScalarByVector(
+        -std.math.sqrt(@abs(1.0 - r_out_perp.lengthSquared())),
+        n,
+    );
+    return add(r_out_perp, r_out_parallel);
+}

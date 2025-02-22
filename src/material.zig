@@ -1,5 +1,6 @@
 // src/material.zig
 
+const std = @import("std");
 const vec3 = @import("vec3.zig");
 
 const Color = @import("color.zig").Color;
@@ -9,6 +10,7 @@ const HitRecord = @import("hittable.zig").HitRecord;
 pub const Material = union(enum) {
     lambertian: Lambertian,
     metal: Metal,
+    dielectric: Dielectric,
 
     pub fn scatter(
         self: Material,
@@ -20,6 +22,7 @@ pub const Material = union(enum) {
         return switch (self) {
             .lambertian => |l| l.scatter(rec, attenuation, scattered),
             .metal => |m| m.scatter(r_in, rec, attenuation, scattered),
+            .dielectric => |d| d.scatter(r_in, rec, attenuation, scattered),
         };
     }
 };
@@ -72,5 +75,47 @@ pub const Metal = struct {
         scattered.* = Ray.init(rec.p, reflected);
         attenuation.* = self._albedo;
         return vec3.dotProduct(scattered.direction(), rec.normal) > 0;
+    }
+};
+
+pub const Dielectric = struct {
+    _refraction_index: f64,
+
+    pub fn init(refraction_index: f64) Dielectric {
+        return Dielectric{
+            ._refraction_index = refraction_index,
+        };
+    }
+
+    pub fn scatter(
+        self: Dielectric,
+        r_in: Ray,
+        rec: HitRecord,
+        attenuation: *Color,
+        scattered: *Ray,
+    ) bool {
+        attenuation.* = Color.init(1.0, 1.0, 1.0);
+        const ri = if (rec.front_face) 1.0 / self._refraction_index else self._refraction_index;
+
+        const unit_direction = vec3.unitVector(r_in.direction());
+        const cos_theta = @min(vec3.dotProduct(unit_direction.negate(), rec.normal), 1.0);
+        const sin_theta = std.math.sqrt(1.0 - cos_theta * cos_theta);
+
+        const cannot_refract = ri * sin_theta > 1.0;
+        var direction = vec3.Vec3{};
+        if (cannot_refract) {
+            direction = vec3.reflect(unit_direction, rec.normal);
+        } else {
+            direction = vec3.refract(unit_direction, rec.normal, ri);
+        }
+
+        scattered.* = Ray.init(rec.p, direction);
+        return true;
+    }
+
+    fn reflectance(cosine: f64, refraction_index: f64) f64 {
+        var r0 = (1 - refraction_index) / (1 + refraction_index);
+        r0 = r0 * r0;
+        return r0 + (1 - r0) * std.math.pow(f64, 1 - cosine, 5);
     }
 };
