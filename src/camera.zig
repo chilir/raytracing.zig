@@ -22,12 +22,21 @@ pub const Camera = struct {
     samples_per_pixel: usize = 10,
     max_depth: usize = 10,
 
+    vfov: f64 = 90,
+    lookfrom: Point3 = Point3{},
+    lookat: Point3 = Point3.init(0, 0, -1),
+    vup: Vec3 = Vec3.init(0, 1, 0),
+
     _image_height: usize = 1,
     _pixel_samples_scale: f64 = 1.0,
     _center: Point3 = Point3{},
     _pixel00_loc: Point3 = Point3{},
     _pixel_delta_u: Vec3 = Vec3{},
     _pixel_delta_v: Vec3 = Vec3{},
+
+    _u: Vec3 = Vec3{},
+    _v: Vec3 = Vec3{},
+    _w: Vec3 = Vec3{},
 
     fn initialize(self: *Camera) void {
         // calc image height
@@ -36,15 +45,23 @@ pub const Camera = struct {
 
         self._pixel_samples_scale = 1.0 / @as(f64, @floatFromInt(self.samples_per_pixel));
 
+        self._center = self.lookfrom;
+
         // camera
-        const focal_length = 1.0;
-        const viewport_height = 2.0;
+        const focal_length = vec3.subtract(self.lookfrom, self.lookat).length();
+        const theta = utils.degreesToRadians(self.vfov);
+        const h = std.math.tan(theta / 2);
+        const viewport_height = 2 * h * focal_length;
         const viewport_width = viewport_height * (@as(f64, @floatFromInt(self.image_width)) /
             @as(f64, @floatFromInt(self._image_height)));
 
+        self._w = vec3.unitVector(vec3.subtract(self.lookfrom, self.lookat));
+        self._u = vec3.unitVector(vec3.crossProduct(self.vup, self._w));
+        self._v = vec3.crossProduct(self._w, self._u);
+
         // vectors across horizontal and down the veritcal viewport edges
-        const viewport_u = Vec3.init(viewport_width, 0, 0);
-        const viewport_v = Vec3.init(0, -viewport_height, 0);
+        const viewport_u = vec3.multiplyScalarByVector(viewport_width, self._u);
+        const viewport_v = vec3.multiplyScalarByVector(viewport_height, self._v.negate());
 
         // horizontal and vertical delta vectors from pixel to pixel
         self._pixel_delta_u = vec3.divide(viewport_u, @as(f64, @floatFromInt(self.image_width)));
@@ -55,7 +72,7 @@ pub const Camera = struct {
             vec3.subtract(
                 vec3.subtract(
                     self._center,
-                    Vec3.init(0, 0, focal_length),
+                    vec3.multiplyScalarByVector(focal_length, self._w),
                 ),
                 vec3.divide(viewport_u, 2),
             ),

@@ -5,6 +5,7 @@ const std = @import("std");
 const vec3 = @import("vec3.zig");
 const hittable = @import("hittable.zig");
 const material = @import("material.zig");
+const utils = @import("utils.zig");
 
 const Vec3 = vec3.Vec3;
 const Point3 = vec3.Point3;
@@ -21,12 +22,9 @@ const Lambertian = material.Lambertian;
 const Metal = material.Metal;
 const Dielectric = material.Dielectric;
 
-// some math utils
-
 pub fn main() !void {
     const material_ground = Material{ .lambertian = Lambertian.init(Color.init(0.8, 0.8, 0)) };
     const material_center = Material{ .lambertian = Lambertian.init(Color.init(0.1, 0.2, 0.5)) };
-    // const material_left = Material{ .metal = Metal.init(Color.init(0.8, 0.8, 0.8), 0.3) };
     const material_left = Material{ .dielectric = Dielectric.init(1.5) };
     const material_bubble = Material{ .dielectric = Dielectric.init(1.0 / 1.5) };
     const material_right = Material{ .metal = Metal.init(Color.init(0.8, 0.6, 0.2), 1.0) };
@@ -59,6 +57,10 @@ pub fn main() !void {
         .image_width = 400,
         .samples_per_pixel = 100,
         .max_depth = 50,
+        .vfov = 20,
+        .lookfrom = Point3.init(-2, 2, 1),
+        .lookat = Point3.init(0, 0, -1),
+        .vup = Vec3.init(0, 1, 0),
     };
     try cam.render(&world);
 }
