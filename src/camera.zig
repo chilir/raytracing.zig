@@ -27,16 +27,20 @@ pub const Camera = struct {
     lookat: Point3 = Point3.init(0, 0, -1),
     vup: Vec3 = Vec3.init(0, 1, 0),
 
+    defocus_angle: f64 = 0,
+    focus_dist: f64 = 10,
+
     _image_height: usize = 1,
     _pixel_samples_scale: f64 = 1.0,
     _center: Point3 = Point3{},
     _pixel00_loc: Point3 = Point3{},
     _pixel_delta_u: Vec3 = Vec3{},
     _pixel_delta_v: Vec3 = Vec3{},
-
     _u: Vec3 = Vec3{},
     _v: Vec3 = Vec3{},
     _w: Vec3 = Vec3{},
+    _defocus_disk_u: Vec3 = Vec3{},
+    _defocus_disk_v: Vec3 = Vec3{},
 
     fn initialize(self: *Camera) void {
         // calc image height
@@ -48,10 +52,9 @@ pub const Camera = struct {
         self._center = self.lookfrom;
 
         // camera
-        const focal_length = vec3.subtract(self.lookfrom, self.lookat).length();
         const theta = utils.degreesToRadians(self.vfov);
         const h = std.math.tan(theta / 2);
-        const viewport_height = 2 * h * focal_length;
+        const viewport_height = 2 * h * self.focus_dist;
         const viewport_width = viewport_height * (@as(f64, @floatFromInt(self.image_width)) /
             @as(f64, @floatFromInt(self._image_height)));
 
@@ -72,7 +75,7 @@ pub const Camera = struct {
             vec3.subtract(
                 vec3.subtract(
                     self._center,
-                    vec3.multiplyScalarByVector(focal_length, self._w),
+                    vec3.multiplyScalarByVector(self.focus_dist, self._w),
                 ),
                 vec3.divide(viewport_u, 2),
             ),
@@ -85,10 +88,22 @@ pub const Camera = struct {
                 vec3.add(self._pixel_delta_u, self._pixel_delta_v),
             ),
         );
+
+        const defocus_radius = self.focus_dist * std.math.tan(utils.degreesToRadians(self.defocus_angle) / 2);
+        self._defocus_disk_u = vec3.multiplyVectorByScalar(self._u, defocus_radius);
+        self._defocus_disk_v = vec3.multiplyVectorByScalar(self._v, defocus_radius);
     }
 
     fn sampleSquare() Vec3 {
         return Vec3.init(utils.randomFloat() - 0.5, utils.randomFloat() - 0.5, 0);
+    }
+
+    fn defocusDiskSample(self: Camera) Point3 {
+        const p = vec3.randomInUnitDisk();
+        return vec3.add(
+            vec3.add(self._center, vec3.multiplyScalarByVector(p.e[0], self._defocus_disk_u)),
+            vec3.multiplyScalarByVector(p.e[1], self._defocus_disk_v),
+        );
     }
 
     fn getRay(self: Camera, i: usize, j: usize) Ray {
@@ -107,7 +122,7 @@ pub const Camera = struct {
             ),
         );
 
-        const ray_origin = self._center;
+        const ray_origin = if (self.defocus_angle <= 0) self._center else self.defocusDiskSample();
         const ray_direction = vec3.subtract(pixel_sample, ray_origin);
 
         return Ray.init(ray_origin, ray_direction);

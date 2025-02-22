@@ -180,3 +180,16 @@ pub inline fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) Vec3 {
     );
     return add(r_out_perp, r_out_parallel);
 }
+
+pub inline fn randomInUnitDisk() Vec3 {
+    while (true) {
+        const p = Vec3.init(
+            utils.randomFloatFromRange(-1, 1),
+            utils.randomFloatFromRange(-1, 1),
+            0,
+        );
+        if (p.lengthSquared() < 1) {
+            return p;
+        }
+    }
+}

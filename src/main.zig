@@ -61,6 +61,8 @@ pub fn main() !void {
         .lookfrom = Point3.init(-2, 2, 1),
         .lookat = Point3.init(0, 0, -1),
         .vup = Vec3.init(0, 1, 0),
+        .defocus_angle = 10,
+        .focus_dist = 3.4,
     };
     try cam.render(&world);
 }
