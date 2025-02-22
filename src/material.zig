@@ -2,6 +2,7 @@
 
 const std = @import("std");
 const vec3 = @import("vec3.zig");
+const utils = @import("utils.zig");
 
 const Color = @import("color.zig").Color;
 const Ray = @import("ray.zig").Ray;
@@ -103,7 +104,7 @@ pub const Dielectric = struct {
 
         const cannot_refract = ri * sin_theta > 1.0;
         var direction = vec3.Vec3{};
-        if (cannot_refract) {
+        if (cannot_refract or reflectance(cos_theta, ri) > utils.randomFloat()) {
             direction = vec3.reflect(unit_direction, rec.normal);
         } else {
             direction = vec3.refract(unit_direction, rec.normal, ri);
