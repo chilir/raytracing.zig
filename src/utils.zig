@@ -4,11 +4,11 @@ const std = @import("std");
 const rand = std.crypto.random;
 
 // some math utils
-pub const infinity = std.math.inf(f64);
-pub const pi = std.math.pi;
+pub const INFINITY = std.math.inf(f64);
+pub const PI = std.math.pi;
 
 pub inline fn degreesToRadians(degrees: f64) f64 {
-    return degrees * (pi / 180.0);
+    return degrees * (PI / 180.0);
 }
 
 pub inline fn randomFloat() f64 {

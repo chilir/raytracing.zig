@@ -5,10 +5,10 @@ const std = @import("std");
 const utils = @import("utils.zig");
 
 pub const Vec3 = struct {
-    e: [3]f64 = [3]f64{ 0, 0, 0 },
+    e: [3]f64 = .{ 0.0, 0.0, 0.0 },
 
     pub fn init(e0: f64, e1: f64, e2: f64) Vec3 {
-        return Vec3{ .e = [3]f64{ e0, e1, e2 } };
+        return .{ .e = .{ e0, e1, e2 } };
     }
 
     pub fn x(self: Vec3) f64 {
@@ -42,7 +42,7 @@ pub const Vec3 = struct {
     }
 
     pub fn divideInPlace(self: *Vec3, t: f64) void {
-        self.multiplyInPlace(1 / t);
+        self.multiplyInPlace(1.0 / t);
     }
 
     pub fn length(self: Vec3) f64 {
@@ -55,13 +55,11 @@ pub const Vec3 = struct {
 
     pub fn nearZero(self: Vec3) bool {
         const s = 1e-8;
-        return (@abs(self.e[0]) < s) and
-            (@abs(self.e[1]) < s) and
-            (@abs(self.e[2]) < s);
+        return @abs(self.e[0]) < s and @abs(self.e[1]) < s and @abs(self.e[2]) < s;
     }
 
     pub fn random() Vec3 {
-        return Vec3.init(
+        return init(
             utils.randomFloat(),
             utils.randomFloat(),
             utils.randomFloat(),
@@ -69,7 +67,7 @@ pub const Vec3 = struct {
     }
 
     pub fn randomFromRange(min: f64, max: f64) Vec3 {
-        return Vec3.init(
+        return init(
             utils.randomFloatFromRange(min, max),
             utils.randomFloatFromRange(min, max),
             utils.randomFloatFromRange(min, max),
@@ -165,7 +163,7 @@ pub inline fn randomOnHemisphere(normal: Vec3) Vec3 {
 }
 
 pub inline fn reflect(v: Vec3, n: Vec3) Vec3 {
-    return subtract(v, multiplyScalarByVector(2 * dotProduct(v, n), n));
+    return subtract(v, multiplyScalarByVector(2.0 * dotProduct(v, n), n));
 }
 
 pub inline fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) Vec3 {
@@ -184,11 +182,11 @@ pub inline fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) Vec3 {
 pub inline fn randomInUnitDisk() Vec3 {
     while (true) {
         const p = Vec3.init(
-            utils.randomFloatFromRange(-1, 1),
-            utils.randomFloatFromRange(-1, 1),
-            0,
+            utils.randomFloatFromRange(-1.0, 1.0),
+            utils.randomFloatFromRange(-1.0, 1.0),
+            0.0,
         );
-        if (p.lengthSquared() < 1) {
+        if (p.lengthSquared() < 1.0) {
             return p;
         }
     }

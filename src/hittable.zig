@@ -9,19 +9,16 @@ const Point3 = vec3.Point3;
 const Ray = @import("ray.zig").Ray;
 const Interval = @import("interval.zig").Interval;
 const Material = @import("material.zig").Material;
-const Lambertian = @import("material.zig").Lambertian;
-const Color = @import("color.zig").Color;
 
 pub const HitRecord = struct {
-    // init with placeholder defaults
-    p: Point3 = Point3{},
-    normal: Vec3 = Vec3{},
-    mat: Material = Material{ .lambertian = Lambertian.init(Color{}) },
-    t: f64 = 0,
-    front_face: bool = false,
+    p: Point3 = undefined,
+    normal: Vec3 = undefined,
+    mat: Material = undefined,
+    t: f64 = undefined,
+    front_face: bool = undefined,
 
     fn setFaceNormal(self: *HitRecord, r: Ray, outward_normal: Vec3) void {
-        self.front_face = vec3.dotProduct(r.direction(), outward_normal) < 0;
+        self.front_face = vec3.dotProduct(r.direction(), outward_normal) < 0.0;
         self.normal = if (self.front_face) outward_normal else outward_normal.negate();
     }
 };
@@ -84,9 +81,9 @@ pub const Sphere = struct {
     _material: Material,
 
     pub fn init(center: Point3, radius: f64, mat: Material) Sphere {
-        return Sphere{
+        return .{
             ._center = center,
-            ._radius = @max(0, radius),
+            ._radius = @max(0.0, radius),
             ._material = mat,
         };
     }
@@ -98,9 +95,7 @@ pub const Sphere = struct {
         const c = oc.lengthSquared() - (self._radius * self._radius);
 
         const discriminant = (h * h) - (a * c);
-        if (discriminant < 0) {
-            return false;
-        }
+        if (discriminant < 0.0) return false;
 
         const sqrtd = std.math.sqrt(discriminant);
 

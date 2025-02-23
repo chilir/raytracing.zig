@@ -1,14 +1,17 @@
 // src/interval.zig
 
-const std = @import("std");
+const utils = @import("utils.zig");
 
 pub const Interval = struct {
     // default is empty interval
-    min: f64 = std.math.inf(f64),
-    max: f64 = -std.math.inf(f64),
+    min: f64 = utils.INFINITY,
+    max: f64 = -utils.INFINITY,
 
     pub fn init(min: f64, max: f64) Interval {
-        return Interval{ .min = min, .max = max };
+        return .{
+            .min = min,
+            .max = max,
+        };
     }
 
     pub fn size(self: Interval) f64 {
@@ -24,15 +27,11 @@ pub const Interval = struct {
     }
 
     pub fn clamp(self: Interval, x: f64) f64 {
-        if (x < self.min) {
-            return self.min;
-        }
-        if (x > self.max) {
-            return self.max;
-        }
+        if (x < self.min) return self.min;
+        if (x > self.max) return self.max;
         return x;
     }
 
     pub const empty = Interval{};
-    pub const universe = Interval.init(-std.math.inf(f64), std.math.inf(f64));
+    pub const universe = Interval.init(-utils.INFINITY, utils.INFINITY);
 };

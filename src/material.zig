@@ -1,6 +1,7 @@
 // src/material.zig
 
 const std = @import("std");
+
 const vec3 = @import("vec3.zig");
 const utils = @import("utils.zig");
 
@@ -32,9 +33,7 @@ pub const Lambertian = struct {
     _albedo: Color,
 
     pub fn init(albedo: Color) Lambertian {
-        return Lambertian{
-            ._albedo = albedo,
-        };
+        return .{ ._albedo = albedo };
     }
 
     pub fn scatter(self: Lambertian, rec: HitRecord, attenuation: *Color, scattered: *Ray) bool {
@@ -55,9 +54,9 @@ pub const Metal = struct {
     _fuzz: f64,
 
     pub fn init(albedo: Color, fuzz: f64) Metal {
-        return Metal{
+        return .{
             ._albedo = albedo,
-            ._fuzz = if (fuzz < 1) fuzz else 1,
+            ._fuzz = if (fuzz < 1.0) fuzz else 1.0,
         };
     }
 
@@ -75,7 +74,7 @@ pub const Metal = struct {
         );
         scattered.* = Ray.init(rec.p, reflected);
         attenuation.* = self._albedo;
-        return vec3.dotProduct(scattered.direction(), rec.normal) > 0;
+        return vec3.dotProduct(scattered.direction(), rec.normal) > 0.0;
     }
 };
 
@@ -83,9 +82,7 @@ pub const Dielectric = struct {
     _refraction_index: f64,
 
     pub fn init(refraction_index: f64) Dielectric {
-        return Dielectric{
-            ._refraction_index = refraction_index,
-        };
+        return .{ ._refraction_index = refraction_index };
     }
 
     pub fn scatter(
@@ -115,8 +112,8 @@ pub const Dielectric = struct {
     }
 
     fn reflectance(cosine: f64, refraction_index: f64) f64 {
-        var r0 = (1 - refraction_index) / (1 + refraction_index);
+        var r0 = (1.0 - refraction_index) / (1.0 + refraction_index);
         r0 = r0 * r0;
-        return r0 + (1 - r0) * std.math.pow(f64, 1 - cosine, 5);
+        return r0 + (1.0 - r0) * std.math.pow(f64, 1.0 - cosine, 5);
     }
 };

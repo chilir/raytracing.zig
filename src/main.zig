@@ -84,7 +84,7 @@ pub fn main() !void {
         .max_depth = 50,
         .vfov = 20,
         .lookfrom = Point3.init(13, 2, 3),
-        .lookat = Point3{},
+        .lookat = .{},
         .vup = Vec3.init(0, 1, 0),
         .defocus_angle = 0.6,
         .focus_dist = 10.0,

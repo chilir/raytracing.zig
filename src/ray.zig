@@ -8,11 +8,11 @@ const Vec3 = vec3.Vec3;
 const Point3 = vec3.Point3;
 
 pub const Ray = struct {
-    _orig: Point3 = Point3{},
-    _dir: Vec3 = Vec3{},
+    _orig: Point3 = undefined,
+    _dir: Vec3 = undefined,
 
     pub fn init(orig: Point3, dir: Vec3) Ray {
-        return Ray{
+        return .{
             ._orig = orig,
             ._dir = dir,
         };
