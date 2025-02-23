@@ -23,46 +23,71 @@ const Metal = material.Metal;
 const Dielectric = material.Dielectric;
 
 pub fn main() !void {
-    const material_ground = Material{ .lambertian = Lambertian.init(Color.init(0.8, 0.8, 0)) };
-    const material_center = Material{ .lambertian = Lambertian.init(Color.init(0.1, 0.2, 0.5)) };
-    const material_left = Material{ .dielectric = Dielectric.init(1.5) };
-    const material_bubble = Material{ .dielectric = Dielectric.init(1.0 / 1.5) };
-    const material_right = Material{ .metal = Metal.init(Color.init(0.8, 0.6, 0.2), 1.0) };
+    const ground_material = Material{ .lambertian = Lambertian.init(Color.init(0.5, 0.5, 0.5)) };
 
     // world
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var world = try HittableList.init(
-        Hittable{ .sphere = Sphere.init(Point3.init(0, -100.5, -1), 100, material_ground) },
+        Hittable{ .sphere = Sphere.init(Point3.init(0, -1000, 0), 1000, ground_material) },
         allocator,
     );
     defer world.deinit();
 
-    try world.add(
-        Hittable{ .sphere = Sphere.init(Point3.init(0, 0, -1.2), 0.5, material_center) },
-    );
-    try world.add(
-        Hittable{ .sphere = Sphere.init(Point3.init(-1, 0, -1), 0.5, material_left) },
-    );
-    try world.add(
-        Hittable{ .sphere = Sphere.init(Point3.init(-1, 0, -1), 0.4, material_bubble) },
-    );
-    try world.add(
-        Hittable{ .sphere = Sphere.init(Point3.init(1, 0, -1), 0.5, material_right) },
-    );
+    for (0..22) |a_unsigned| {
+        const a = @as(i32, @intCast(a_unsigned)) - 11;
+        for (0..22) |b_unsigned| {
+            const b = @as(i32, @intCast(b_unsigned)) - 11;
+            const choose_mat = utils.randomFloat();
+            const center = Point3.init(
+                @as(f64, @floatFromInt(a)) + 0.9 * utils.randomFloat(),
+                0.2,
+                @as(f64, @floatFromInt(b)) + 0.9 * utils.randomFloat(),
+            );
+
+            var sphere_material: Material = undefined;
+            if (vec3.subtract(center, Point3.init(4, 0.2, 0)).length() > 0.9) {
+                if (choose_mat < 0.8) {
+                    // diffuse
+                    const albedo = vec3.elementWiseProduct(Color.random(), Color.random());
+                    sphere_material = Material{ .lambertian = Lambertian.init(albedo) };
+                    try world.add(Hittable{ .sphere = Sphere.init(center, 0.2, sphere_material) });
+                } else if (choose_mat < 0.95) {
+                    // metal
+                    const albedo = Color.randomFromRange(0.5, 1);
+                    const fuzz = utils.randomFloatFromRange(0, 0.5);
+                    sphere_material = Material{ .metal = Metal.init(Color.init(albedo.x(), albedo.y(), albedo.z()), fuzz) };
+                    try world.add(Hittable{ .sphere = Sphere.init(center, 0.2, sphere_material) });
+                } else {
+                    // glass
+                    sphere_material = Material{ .dielectric = Dielectric.init(1.5) };
+                    try world.add(Hittable{ .sphere = Sphere.init(center, 0.2, sphere_material) });
+                }
+            }
+        }
+    }
+
+    const material1 = Material{ .dielectric = Dielectric.init(1.5) };
+    try world.add(Hittable{ .sphere = Sphere.init(Point3.init(0, 1, 0), 1.0, material1) });
+
+    const material2 = Material{ .lambertian = Lambertian.init(Color.init(0.4, 0.2, 0.1)) };
+    try world.add(Hittable{ .sphere = Sphere.init(Point3.init(-4, 1, 0), 1.0, material2) });
+
+    const material3 = Material{ .metal = Metal.init(Color.init(0.7, 0.6, 0.5), 0.0) };
+    try world.add(Hittable{ .sphere = Sphere.init(Point3.init(4, 1, 0), 1.0, material3) });
 
     var cam = Camera{
         .aspect_ratio = 16.0 / 9.0,
-        .image_width = 400,
-        .samples_per_pixel = 100,
+        .image_width = 1200,
+        .samples_per_pixel = 500,
         .max_depth = 50,
         .vfov = 20,
-        .lookfrom = Point3.init(-2, 2, 1),
-        .lookat = Point3.init(0, 0, -1),
+        .lookfrom = Point3.init(13, 2, 3),
+        .lookat = Point3{},
         .vup = Vec3.init(0, 1, 0),
-        .defocus_angle = 10,
-        .focus_dist = 3.4,
+        .defocus_angle = 0.6,
+        .focus_dist = 10.0,
     };
     try cam.render(&world);
 }
