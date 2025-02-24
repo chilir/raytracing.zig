@@ -19,8 +19,13 @@ const Lambertian = material.Lambertian;
 const Metal = material.Metal;
 const Dielectric = material.Dielectric;
 
+pub const std_options = .{
+    .log_level = .info,
+};
+
 pub fn main() !void {
-    const ground_material = Material{ .lambertian = Lambertian.init(Color.init(0.5, 0.5, 0.5)) };
+    // const ground_material = Material{ .lambertian = Lambertian.init(Color.init(0.5, 0.5, 0.5)) };
+    const ground_material = Material{ .lambertian = Lambertian.init(Color.init(0.3, 0.7, 0.9)) };
 
     // world
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -44,7 +49,11 @@ pub fn main() !void {
             );
 
             var sphere_material: Material = undefined;
-            if (vec3.subtract(center, Point3.init(4, 0.2, 0)).length() > 0.9) {
+            // if (vec3.subtract(center, Point3.init(4, 0.2, 0)).length() > 0.9) {
+            if (vec3.subtract(center, Point3.init(0, 0.2, 2)).length() > 1.5 and
+                vec3.subtract(center, Point3.init(4, 0.2, 1)).length() > 1.5 and
+                vec3.subtract(center, Point3.init(-4, 0.2, -3)).length() > 1.5)
+            {
                 if (choose_mat < 0.8) {
                     // diffuse
                     const albedo = vec3.elementWiseProduct(Color.random(), Color.random());
@@ -65,26 +74,34 @@ pub fn main() !void {
         }
     }
 
-    const material1 = Material{ .dielectric = Dielectric.init(1.5) };
-    try world.add(Hittable{ .sphere = Sphere.init(Point3.init(0, 1, 0), 1.0, material1) });
+    // const material1 = Material{ .dielectric = Dielectric.init(1.5) };
+    // try world.add(Hittable{ .sphere = Sphere.init(Point3.init(0, 1, 0), 1.0, material1) });
 
-    const material2 = Material{ .lambertian = Lambertian.init(Color.init(0.4, 0.2, 0.1)) };
-    try world.add(Hittable{ .sphere = Sphere.init(Point3.init(-4, 1, 0), 1.0, material2) });
+    // const material2 = Material{ .lambertian = Lambertian.init(Color.init(0.4, 0.2, 0.1)) };
+    // try world.add(Hittable{ .sphere = Sphere.init(Point3.init(-4, 1, 0), 1.0, material2) });
+    const material2 = Material{ .lambertian = Lambertian.init(Color.init(0.2, 0.4, 0.4)) };
+    try world.add(Hittable{ .sphere = Sphere.init(Point3.init(0, 1.2, 2), 1.2, material2) });
 
-    const material3 = Material{ .metal = Metal.init(Color.init(0.7, 0.6, 0.5), 0.0) };
-    try world.add(Hittable{ .sphere = Sphere.init(Point3.init(4, 1, 0), 1.0, material3) });
+    // const material3 = Material{ .metal = Metal.init(Color.init(0.7, 0.6, 0.5), 0.0) };
+    // try world.add(Hittable{ .sphere = Sphere.init(Point3.init(4, 1, 0), 1.0, material3) });
+    const material3 = Material{ .metal = Metal.init(Color.init(0.7, 0.8, 0.9), 0.0) };
+    try world.add(Hittable{ .sphere = Sphere.init(Point3.init(4, 1.2, 1), 1.2, material3) });
+    try world.add(Hittable{ .sphere = Sphere.init(Point3.init(-4, 1.2, -3), 1.2, material3) });
 
     var cam = Camera{
         .aspect_ratio = 16.0 / 9.0,
         .image_width = 1200,
         .samples_per_pixel = 500,
         .max_depth = 50,
-        .vfov = 20,
-        .lookfrom = Point3.init(13, 2, 3),
+        .vfov = 25,
+        // .lookfrom = Point3.init(13, 2, 3),
+        .lookfrom = Point3.init(13, 3, -0.1),
         .lookat = .{},
-        .vup = Vec3.init(0, 1, 0),
-        .defocus_angle = 0.6,
-        .focus_dist = 10.0,
+        .vup = Vec3.init(0.0, 1.0, 0.0),
+        // .defocus_angle = 0.6,
+        .defocus_angle = 0.35,
+        // .focus_dist = 10.0,
+        .focus_dist = 9.0,
     };
     try cam.render(&world);
 }
